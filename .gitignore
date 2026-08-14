@@ -1,0 +1,46 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# --- Herramientas ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Editores ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Salidas de los laboratorios ---
+# Los datos de muestra se regeneran con data/generar_datos.py, no se versionan.
+labs/**/data/muestra/
+entregas/**/data/muestra/
+
+# Los manifiestos son salida de la ejecución, no fuente.
+manifest.sha256
+*.manifest.sha256
+
+# --- Nunca subir secretos ---
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+credenciales*
