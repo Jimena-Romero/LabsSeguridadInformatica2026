@@ -79,7 +79,57 @@ Por lo tanto, la principal lección de este ejercicio es que **la longitud y la 
 
 
 ## 3. Parte B.2 — Autenticación
-...
+
+Se implementaron tres funciones en `cripto.py`: `mac_ingenuo()` (la forma
+insegura), `mac_hmac()` (la forma correcta) y `verificar_mac()` (comparación en
+tiempo constante).
+
+**B.2.1 — Por qué `sha256(clave || mensaje)` permite length-extension**
+
+SHA-256 usa la construcción Merkle-Damgård: procesa el mensaje en bloques y el
+digest final *es* su estado interno al terminar. Esto tiene una consecuencia
+grave para una MAC construida como `sha256(clave || mensaje)`: quien conoce ese
+digest conoce el estado interno de la función en ese punto, y puede **seguir
+hasheando desde ahí** como si el cómputo no hubiera terminado.
+
+Un atacante que observa un mensaje y su MAC, **sin conocer la clave**, puede
+calcular un MAC válido para `clave || mensaje || padding || datos_extra`. Es
+decir, puede **anexar datos y producir un tag válido** para la versión extendida.
+Ejemplo: si el mensaje era `usuario=juan&monto=100` con su MAC, el atacante puede
+generar un MAC válido para `usuario=juan&monto=100&admin=true` sin saber la clave.
+La falla no está en SHA-256, sino en usarlo directamente como MAC.
+
+**B.2.2 — Cómo lo resuelve HMAC**
+
+HMAC (RFC 2104) no concatena la clave y hashea una vez, sino que aplica dos
+hashes anidados con dos paddings distintos:
+
+    HMAC(K, m) = H( (K ⊕ opad) || H( (K ⊕ ipad) || m ) )
+
+El hash interno queda **envuelto** por el externo. El valor que se expone es la
+salida del hash externo, no el estado interno "crudo" que el ataque de
+length-extension necesitaría. Para extenderlo haría falta la clave, que está
+incorporada en el hash externo. Por eso HMAC es seguro estructuralmente, con
+independencia de la función de hash que use por debajo.
+
+**B.2.3 — Qué ataque evita comparar en tiempo constante**
+
+Comparar tags con `==` es vulnerable a un **ataque de temporización (timing)**.
+El operador `==` compara byte a byte y **corta apenas encuentra una diferencia**,
+así que tarda un poco más cuanto más bytes coinciden desde el inicio. Un atacante
+que mide el tiempo de respuesta explota esto: prueba tags variando el primer byte
+hasta detectar el que tarda un poco más (acertó ese byte), luego el segundo, y
+así reconstruye el tag válido **byte a byte** — convirtiendo un problema inviable
+(adivinar 32 bytes de golpe) en uno lineal.
+
+`hmac.compare_digest()` compara **siempre todos los bytes**, sin cortar antes, de
+modo que el tiempo no depende de cuántos coincidieron. Lo verificamos
+empíricamente: con una comparación ingenua, un tag que difiere en el primer byte
+tardó ~4 ms y uno que coincidía en 500 bytes tardó ~170 ms; con
+`hmac.compare_digest()` ambos casos rondaron los 14 ms, sin diferencia
+apreciable. Ejemplo concreto del riesgo: una API que valida firmas de webhooks
+con `==` podría permitir que un atacante, midiendo latencias, forje una firma
+válida; con `compare_digest()` esa fuga desaparece.
 
 ## 4. Bitácora
 
