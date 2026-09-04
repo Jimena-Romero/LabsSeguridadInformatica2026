@@ -3,7 +3,13 @@
 **Grupo:** 02 · **Integrantes:** *(vos — usuario GitHub), (tu compañera — usuario GitHub)* · **Fecha:** 2026-09-04
 
 ## 0. Declaración de uso de IA
-*(acá ponen si usaron IA y cómo, según pida el enunciado)*
+
+Se utilizó un asistente de IA (Claude) como apoyo para: comprender los
+conceptos criptográficos del lab (length-extension, HMAC, ataques de
+temporización), orientar la implementación de las funciones en `cripto.py`,
+y revisar la redacción del informe. El código y las respuestas fueron
+verificados y ejecutados por el grupo antes de la entrega. La comprensión
+final de los contenidos es responsabilidad de los integrantes.
 
 ## 1. Parte A — Análisis de la falla
 **Caso:** Sony PS3 (ECDSA) — reutilización del nonce k al firmar
@@ -132,4 +138,21 @@ con `==` podría permitir que un atacante, midiendo latencias, forje una firma
 válida; con `compare_digest()` esa fuga desaparece.
 
 ## 4. Bitácora
+
+```bash
+# Preparación del entorno
+python3 data/generar_datos.py
+
+# B.1 — Romper el cifrado XOR de 1 byte
+python3 src/cripto.py romper --hex $(cat data/muestra/reto_xor.hex)
+# → clave=0x37
+# → "Memo interno PhantomCorp: la clave del wifi de invitados es Phantom-Guest-2026..."
+
+# B.2 — Calcular MAC de un mensaje
+python3 src/cripto.py mac --clave secreta --msg "pago 100" --modo hmac
+# → 5ec4a52407221836a66e8d654d914aaa4b18bd31cf31907348bcd292677b902e
+
+python3 src/cripto.py mac --clave secreta --msg "pago 100" --modo ingenuo
+# → a8cc54c07b3acb7470c25ab9eea5234bfa2562e37298eee275e39a457004b725
+```
 
