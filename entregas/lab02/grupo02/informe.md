@@ -142,6 +142,7 @@ válida; con `compare_digest()` esa fuga desaparece.
 ```bash
 # Preparación del entorno
 python3 data/generar_datos.py
+python3 src/cripto.py xor --texto hola --clave K
 
 # B.1 — Romper el cifrado XOR de 1 byte
 python3 src/cripto.py romper --hex $(cat data/muestra/reto_xor.hex)
