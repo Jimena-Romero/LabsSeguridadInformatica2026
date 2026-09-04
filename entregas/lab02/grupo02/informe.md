@@ -38,7 +38,45 @@ La idea central es que reutilizar el nonce en ECDSA dos veces equivale, matemát
 El nonce k debe generarse de manera aleatoria y criptográficamente segura (usando un CSPRNG) en cada operación de firma, sin reutilizarlo nunca ni derivarlo de forma predecible. Como alternativa más robusta, se puede usar ECDSA determinístico (RFC 6979), que deriva k de manera segura y reproducible a partir del mensaje y la clave privada, eliminando la dependencia de un generador aleatorio externo y evitando así este tipo de fallo por implementación.
 
 ## 2. Parte B.1 — Romper el XOR
-...
+
+Para esta parte se implementó y ejecutó la función `romper_xor_1byte()`, cuyo objetivo es recuperar el texto original de un mensaje cifrado mediante XOR con una clave de un solo byte.
+
+El procedimiento consiste en probar las **256 claves posibles** que puede representar un byte, desde `0x00` hasta `0xff`. Para cada una de ellas se aplica nuevamente XOR sobre el texto cifrado, aprovechando que XOR es una operación involutiva: si se aplica la misma clave utilizada para cifrar, se recupera el texto original.
+
+Luego, cada texto candidato se evalúa mediante un criterio simple de frecuencia de caracteres. Se asigna un puntaje según la cantidad de bytes que corresponden a caracteres frecuentes en lenguaje natural, principalmente espacios, letras comunes, vocales y letras mayúsculas. Finalmente, se selecciona como resultado la clave cuyo texto candidato obtiene el mayor puntaje.
+
+La ejecución se realizó mediante:
+
+```bash
+python src/cripto.py romper --hex $(cat data/muestra/reto_xor.hex)
+```
+
+En Windows PowerShell, el equivalente utilizado fue:
+
+```powershell
+python entregas\lab02\grupo02\src\cripto.py romper --hex "$(Get-Content data\muestra\reto_xor.hex)"
+```
+
+El programa recuperó la siguiente clave:
+
+```text
+clave=0x37
+```
+
+Y el texto claro obtenido fue:
+
+```text
+Memo interno PhantomCorp: la clave del wifi de invitados es Phantom-Guest-2026. No compartir fuera de la empresa.
+```
+
+### Resultado y conclusión
+
+El ataque permitió recuperar correctamente el contenido del mensaje probando únicamente **256 posibilidades**, lo que demuestra que una clave XOR de un solo byte ofrece un espacio de búsqueda extremadamente pequeño.
+
+Aunque XOR puede ser seguro cuando se utiliza correctamente, por ejemplo con una clave aleatoria del mismo tamaño que el mensaje y sin reutilizarla, utilizar una clave de un solo byte repetida hace que el cifrado sea trivialmente vulnerable a fuerza bruta. Además, el análisis de frecuencia permite identificar rápidamente cuál de los 256 resultados tiene mayor probabilidad de corresponder a lenguaje natural.
+
+Por lo tanto, la principal lección de este ejercicio es que **la longitud y la aleatoriedad de la clave son fundamentales para la seguridad de un cifrado**. Un espacio de claves demasiado pequeño permite recorrer todas las posibilidades en un tiempo prácticamente inmediato.
+
 
 ## 3. Parte B.2 — Autenticación
 ...
