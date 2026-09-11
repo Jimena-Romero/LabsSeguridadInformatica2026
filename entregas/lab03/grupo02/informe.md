@@ -43,7 +43,43 @@ intentos de login masivos [5].
 
 ### Cómo se explotó
 
+Lo que convirtió esto en una catástrofe fue una función de la plataforma:
+23andMe tenía "DNA Relatives", que comparte datos entre perfiles emparentados
+genéticamente. A partir de las 14.000 cuentas comprometidas directamente, esa
+función expuso otros 5,5 millones de perfiles, y "Family Tree" expuso 1,4
+millones más [3] — es decir, cada cuenta vulnerada por reuso de contraseña
+filtraba en cascada los datos de decenas de familiares que nunca reutilizaron
+nada.
+
+Hubo además fallas de detección: en julio de 2023 la empresa investigó un pico
+anómalo de intentos de transferencia de perfil y lo descartó como aislado, y en
+agosto desestimó como hoax una publicación en Reddit que alertaba sobre el robo
+de datos — no era falsa [2]. La investigación completa recién arrancó en
+octubre, cuando un empleado encontró los datos a la venta [2].
+
+Un informe conjunto de las autoridades de privacidad de Canadá y el Reino Unido
+identificó tres señales de intrusión distintas durante el ataque que, vistas en
+conjunto, deberían haber alertado a la empresa antes de octubre, y remarcó que
+23andMe tardó cuatro días en cerrar todas las sesiones activas y forzar el
+reset de contraseñas, y un mes en desactivar la descarga de ADN crudo e
+implementar MFA obligatorio [4].
+
+
 ### La forma correcta
+
+•⁠  ⁠*MFA obligatorio* (lo que implementamos en la Parte B.2): aunque el
+  atacante tenga el par usuario/contraseña correcto, sin el segundo factor no
+  entra. 23andMe no lo exigía por defecto antes del incidente [5].
+•⁠  ⁠*Rate limiting / detección de anomalías* en el login: picos de intentos
+  fallidos desde rangos de IP inusuales deben disparar una alerta o bloqueo
+  automático, no ser descartados como "aislados".
+•⁠  ⁠*Screening de credenciales contra listas de contraseñas filtradas* (p. ej.
+  haveibeenpwned API) al login o registro, para forzar el cambio de una
+  contraseña ya comprometida en otro sitio.
+•⁠  ⁠*Diseño de "blast radius" limitado*: una función social/colaborativa no
+  debería heredar automáticamente el nivel de exposición de una cuenta
+  individual comprometida.
+
 
 ### Por qué el 2FA corta este ataque específicamente
 A diferencia de los casos que rompen el *almacenamiento* de contraseñas, acá la
