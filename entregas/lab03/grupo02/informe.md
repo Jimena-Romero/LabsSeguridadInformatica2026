@@ -103,4 +103,56 @@ posee aunque tenga la lista completa de combos usuario/contraseña.
 
 ## 2. Parte B.1 — Contraseñas (por qué salt por usuario, por qué muchas iteraciones)
 ## 3. Parte B.2 — TOTP (por qué frena el robo de contraseña; qué NO protege)
+
+Implementamos `totp()` a partir de `hotp()` (ya provista): el contador de HOTP se
+reemplaza por el tiempo actual dividido en pasos de 30 segundos
+(`contador = t // paso`), de modo que el código de 6 dígitos cambia automáticamente
+cada 30 segundos sin que el servidor y el usuario necesiten sincronizar un
+contador explícito — alcanza con que ambos tengan el reloj razonablemente
+sincronizado. Verificado contra el vector oficial del RFC 6238: con el secreto
+ASCII `12345678901234567890` y `t=59`, `totp()` devuelve `287082`, el valor
+esperado por la norma.
+
+### Por qué el TOTP frena el robo de contraseña
+
+El TOTP es un segundo factor de autenticación de tipo **"algo que tenés"**
+(el dispositivo o app que genera el código, inicializado con un secreto
+compartido), a diferencia de la contraseña, que es **"algo que sabés"**. Si un
+atacante consigue la contraseña — ya sea por credential stuffing, por un
+volcado de hashes crackeados, o por phishing — todavía necesita el código TOTP
+vigente en ese momento para completar el login. Como el código se deriva del
+secreto compartido (que nunca viaja por la red) y cambia cada 30 segundos, el
+atacante no puede reconstruirlo a partir de la contraseña filtrada ni
+reutilizar un código capturado más allá de su corta ventana de validez. Esto es
+exactamente lo que le faltaba a 23andMe (Parte A): con MFA obligatorio, las
+14.000 cuentas con contraseña reutilizada no habrían sido vulnerables aunque el
+par usuario/contraseña ya estuviera filtrado en otra brecha.
+
+### Qué NO protege el TOTP
+
+- **No protege si el propio dispositivo/secreto del segundo factor es
+  robado o su secreto compartido se filtra** (por ejemplo, extrayendo el
+  secreto de un backup en la nube mal protegido): con el secreto en mano, el
+  atacante puede generar los mismos códigos válidos que el usuario legítimo,
+  sin necesitar volver a "robar" nada en cada login.
+- **No protege contra phishing en tiempo real (man-in-the-middle / adversary-in-the-middle):**
+  si el usuario es engañado para tipear tanto la contraseña como el código TOTP
+  vigente en un sitio falso, el atacante puede reenviar ambos de inmediato al
+  sitio real y autenticarse dentro de la ventana de 30 segundos, antes de que
+  el código expire.
+- **No protege contra malware en el dispositivo del usuario** que pueda leer
+  el código generado (o el secreto) directamente desde la pantalla o la
+  memoria del teléfono/app.
+- **No reemplaza un buen manejo de contraseñas:** sigue siendo necesario el
+  almacenamiento correcto (Parte B.1) — el TOTP es una capa adicional, no un
+  sustituto de la primera.
 ## 4. Bitácora de comandos
+
+```bash
+# Implementación y verificación de totp() (Parte B.2)
+python3 src/auth.py totp --secret 12345678901234567890 --t 59
+# -> 287082 (coincide con el vector oficial del RFC 6238)
+
+python3 src/verificar.py
+# -> totp coincide con el vector del RFC 6238 (OK)
+```
