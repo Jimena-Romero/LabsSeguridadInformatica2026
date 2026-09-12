@@ -102,6 +102,34 @@ posee aunque tenga la lista completa de combos usuario/contraseña.
    https://en.wikipedia.org/wiki/Credential_stuffing
 
 ## 2. Parte B.1 — Contraseñas (por qué salt por usuario, por qué muchas iteraciones)
+
+### Por qué salt por usuario
+
+Sin salt, dos usuarios con la misma contraseña producen exactamente el mismo
+hash. Eso le da al atacante dos ventajas gratis: puede detectar contraseñas
+repetidas entre cuentas con solo comparar los hashes, y lo peor es que puede
+precomputar una **rainbow table** (hashes de millones de contraseñas comunes)
+una única vez y reutilizarla contra cualquier base de datos filtrada, como
+pasó en el caso LinkedIn 2012 (caso 0 de la Parte A), donde los hashes SHA-1
+sin salt se crackearon masivamente apenas se filtraron. Con un salt aleatorio
+distinto por usuario, el mismo password produce salidas completamente
+distintas, así que la rainbow table deja de tener valor: el atacante tiene que
+atacar cada hash individualmente, uno por uno, en lugar de una sola vez para
+toda la base.
+
+### Por qué muchas iteraciones (200.000) y no una
+
+Un solo hash SHA-256 se calcula en el orden de nanosegundos, y hardware
+especializado (GPUs, o directamente ASICs) puede evaluar miles de millones de
+hashes por segundo. Eso hace que probar diccionarios completos sea trivial incluso con salt, si el hash es "barato".
+PBKDF2 aplica la función hash en cadena miles de veces a propósito, de modo
+que un solo intento de verificación toma un tiempo perceptible pero
+aceptable para un login legítimo (milisegundos), mientras que multiplica por
+200.000 el costo de cada intento del atacante. Esto no vuelve el ataque
+imposible, pero lo vuelve órdenes de magnitud más lento y caro, lo cual
+en la práctica es lo que separa una contraseña robada explotable de una que
+no vale la pena atacar por fuerza bruta.
+
 ## 3. Parte B.2 — TOTP (por qué frena el robo de contraseña; qué NO protege)
 
 Implementamos `totp()` a partir de `hotp()` (ya provista): el contador de HOTP se
@@ -147,6 +175,18 @@ par usuario/contraseña ya estuviera filtrado en otra brecha.
   almacenamiento correcto (Parte B.1) — el TOTP es una capa adicional, no un
   sustituto de la primera.
 ## 4. Bitácora de comandos
+
+```bash
+# Implementación y verificación de hash_password()/verify_password() (Parte B.1)
+python3 src/auth.py hash --password 'Phantom-2026!'
+# -> pbkdf2_sha256$200000$<salt_hex>$<dk_hex>
+
+python3 src/auth.py verify --password 'Phantom-2026!' --registro 'pbkdf2_sha256$200000$<salt_hex>$<dk_hex>'
+# -> OK
+
+python3 src/verificar.py
+# -> hash_password/verify_password: salt distinto por corrida, verificación OK, tiempo constante (OK)
+```
 
 ```bash
 # Implementación y verificación de totp() (Parte B.2)
