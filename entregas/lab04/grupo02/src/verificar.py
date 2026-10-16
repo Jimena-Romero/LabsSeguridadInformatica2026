@@ -11,7 +11,7 @@ def check(n, fn):
     except NotImplementedError: print(f"  {DIM}·  {n}  (todavía sin implementar){RST}"); P["todo"]+=1
     except AssertionError as e: print(f"  {NO}✗{RST} {n}  → {e}"); P["no"]+=1
     except Exception as e: print(f"  {NO}✗{RST} {n}  → {type(e).__name__}: {e}"); P["no"]+=1
-try: import entregas.lab04.grupo02.src.riesgo as riesgo
+try: import riesgo
 except Exception as e: print(f"{NO}No pude importar riesgo.py: {e}{RST}"); sys.exit(1)
 def t_ale(): assert riesgo.ale(50000, 0.4) == 20000, "ALE = SLE x ARO = 50000 x 0.4 = 20000"
 def t_roi():
