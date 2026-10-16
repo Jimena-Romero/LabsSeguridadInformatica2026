@@ -80,6 +80,8 @@ La decisión de cada respuesta se basó en el ALE calculado en la Parte B, en el
 | 4 | Backups en un disco dentro de la oficina | $3.000 | **Aceptar (parcial) y transferir** | El ALE es el más bajo y un control costoso costaría más de lo que evita. Se aplica solo una mejora de bajo costo (copia cifrada fuera de sitio), se acepta el riesgo residual y se transfiere parte del impacto con la cobertura del seguro de la oficina. Ver B.3. |
 | 5 | Sin plan de respuesta a incidentes | No se estimó de forma individual | **Mitigar** | No genera una pérdida propia, pero **aumenta el SLE de todos los demás riesgos**: sin plan, cada incidente dura más, se contiene peor y se comunica tarde. Documentar roles, contactos y pasos tiene un costo bajo frente a su efecto sobre el resto. |
 
+**Nota sobre el riesgo #5.** Aunque no se le asignó un ALE propio, su efecto se puede analizar de forma indirecta: la falta de un plan de respuesta funciona como un multiplicador del impacto de los otros cuatro riesgos. Sin roles ni pasos definidos, la detección y la contención se demoran, el tiempo de exposición crece y la comunicación a clientes y autoridades llega tarde, lo que eleva el SLE de cada incidente. Por eso, aunque no aparezca en el ranking por ALE, mitigarlo mejora la postura de seguridad de todo el escenario con un esfuerzo bajo (documentar el plan, definir responsables y realizar un simulacro anual).
+
 **Cierre:** no se eligió "mitigar todo". Se combinaron cuatro estrategias: mitigar (1, 2, 5), evitar (3, parte de los datos de tarjeta), aceptar (4) y transferir (4, mediante seguro), según el ALE y el costo de cada control.
 
 ---
