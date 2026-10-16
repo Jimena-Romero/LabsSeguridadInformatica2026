@@ -1,218 +1,53 @@
-# Laboratorio 01 — Mini-research
+# Tema 2 — La cadena de suministro de software como superficie de ataque
 
-**Extensión:** 800 a 1000 palabras (sin contar bibliografía)
-**Modalidad:** un tema por grupo, a elección
-**Entrega:** `entregas/lab01/grupoXX/research.md`
+## Introducción
 
----
+La cadena de suministro de software comprende las personas, herramientas, bibliotecas, repositorios, servicios de compilación y mecanismos de distribución que intervienen en la producción de una aplicación. Tradicionalmente, las organizaciones confiaban en que el software proveniente de un proveedor conocido era seguro. Sin embargo, esa confianza puede convertirse en una superficie de ataque: comprometer un componente, una dependencia o el proceso de actualización puede afectar a muchas organizaciones que utilizan el mismo producto.
 
-## Por qué se pide esto
+El riesgo no se limita al código desarrollado por una empresa. También incluye bibliotecas de código abierto, herramientas de construcción y sistemas de distribución. El Instituto Nacional de Estándares y Tecnología de Estados Unidos (NIST) destaca la necesidad de gestionar los riesgos de seguridad asociados al software adquirido, sus proveedores y sus componentes (National Institute of Standards and Technology [NIST], 2024).
 
-Un ingeniero en sistemas que trabaja en seguridad va a tener que leer
-documentación técnica, informes de incidentes y normativa, y va a tener que
-distinguir qué está respaldado de qué es marketing. Esa habilidad no se
-adquiere leyendo resúmenes: se adquiere yendo a la fuente.
+## Casos relevantes: SolarWinds y Log4Shell
 
-No se busca un resumen de Wikipedia con otras palabras. Se busca que tomen una
-posición y la defiendan con evidencia.
+El incidente de SolarWinds, identificado públicamente en diciembre de 2020, ejemplifica el compromiso de una cadena de suministro. Según la Cybersecurity and Infrastructure Security Agency (CISA, 2020), determinadas versiones de la plataforma Orion, distribuidas entre marzo y junio de ese año, fueron afectadas por una actividad maliciosa. El ataque incorporó el código malicioso SUNBURST al proceso de distribución del software, de modo que clientes que recibieron actualizaciones comprometidas podían quedar expuestos.
 
----
+La importancia del caso radica en que el punto de entrada no fue necesariamente una vulnerabilidad explotada de forma directa en cada organización afectada. El software distribuido por un proveedor legítimo se convirtió en un vehículo para introducir código malicioso en los entornos de sus clientes. Por eso, verificar únicamente la identidad del proveedor o instalar actualizaciones oficiales no resulta suficiente si el propio proceso de desarrollo o distribución ha sido comprometido.
 
-## Temas a elección
+Log4Shell, divulgada en diciembre de 2021 como CVE-2021-44228, muestra otra dimensión del mismo problema. La vulnerabilidad afectaba a determinadas versiones de Apache Log4j 2, una biblioteca de registro utilizada por numerosas aplicaciones Java. La Apache Software Foundation (2021) documentó que las versiones afectadas podían permitir la ejecución remota de código en determinadas condiciones. El alcance potencial era amplio porque una aplicación podía incorporar Log4j indirectamente, sin que el equipo responsable conociera su presencia.
 
-Elegí **uno**. Indicá cuál al principio del documento.
+Es importante distinguir ambos casos: SolarWinds fue un ataque que comprometió el proceso de distribución de software, mientras que Log4Shell fue una vulnerabilidad en una dependencia ampliamente utilizada. No son incidentes idénticos, pero ambos demuestran que la seguridad de una aplicación depende también de elementos externos y de las relaciones entre sus componentes.
 
-### Tema 1 — La evolución del perfil del atacante, 1988 a hoy
+## De la confianza tradicional a la verificación
 
-De un estudiante de posgrado que libera un gusano por curiosidad a
-organizaciones criminales con estructura empresarial, servicio de atención a
-la víctima y programas de afiliados.
+La confianza tradicional se basa en la reputación del proveedor, la procedencia aparente del software y la expectativa de que las actualizaciones legítimas son confiables. Estos criterios siguen siendo relevantes, pero no ofrecen evidencia técnica suficiente sobre qué componentes contiene un producto, cómo fue construido o si sufrió modificaciones no autorizadas.
 
-Cuestiones a abordar: qué motivaciones dominaron en cada etapa, cómo cambió la
-relación costo/beneficio del ataque, qué papel jugó la aparición de las
-criptomonedas, y qué implica este cambio para el modelo de amenaza de una PyME
-argentina hoy.
+Una estrategia más sólida combina inventario, verificación y gestión continua del riesgo. La lista de materiales de software, conocida como *Software Bill of Materials* (SBOM), registra los componentes que integran un producto y sus relaciones. Según NIST (2024), una SBOM puede facilitar la identificación de dependencias vulnerables y acelerar la respuesta cuando se publica una alerta de seguridad.
 
-### Tema 2 — La cadena de suministro de software como superficie de ataque
+Por ejemplo, ante una vulnerabilidad como Log4Shell, una organización que mantiene inventarios actualizados de sus aplicaciones y dependencias puede localizar con mayor rapidez los sistemas potencialmente afectados. No obstante, una SBOM no garantiza que el software sea seguro: puede estar incompleta, desactualizada o no reflejar correctamente las dependencias incorporadas durante la compilación. Además, identificar un componente vulnerable no determina por sí solo si la aplicación es explotable; es necesario evaluar versiones, configuraciones y condiciones de uso.
 
-Comprometer al proveedor para llegar a miles de clientes de una sola vez.
-Tomen como referencia el caso SolarWinds/SUNBURST (2020) y el caso Log4Shell
-(2021) — que son distintos entre sí, y esa diferencia es parte del análisis.
+## SBOM, SLSA y controles complementarios
 
-Cuestiones a abordar: por qué el modelo de confianza tradicional falla acá,
-qué proponen las iniciativas de **SBOM** (Software Bill of Materials) y
-**SLSA**, y qué límites tienen esas propuestas.
+Otra iniciativa es SLSA (*Supply-chain Levels for Software Artifacts*), un marco que propone niveles progresivos de seguridad para la producción de software. Incluye mecanismos de procedencia verificable (*provenance*) que permiten documentar qué plataforma construyó un artefacto, qué proceso utilizó y cuáles fueron sus entradas. Los niveles superiores incorporan garantías más estrictas para reducir la posibilidad de manipulación durante o después de la compilación (SLSA, s. f.).
 
-### Tema 3 — La disponibilidad, la propiedad descuidada de la tríada
+La SBOM y SLSA cumplen funciones complementarias. La primera ayuda a responder qué componentes forman parte del software; la segunda contribuye a verificar cómo se produjo un artefacto y de dónde proviene. Para aprovecharlas, las organizaciones deberían mantener dependencias actualizadas, analizar vulnerabilidades, proteger repositorios y credenciales, limitar privilegios en los entornos de compilación y verificar las firmas y los metadatos de los artefactos antes de desplegarlos.
 
-La confidencialidad se lleva los titulares. Pero para muchas organizaciones, un
-día sin sistemas cuesta más que una filtración de datos.
+Estas medidas deben acompañarse de supervisión continua y procedimientos de respuesta a incidentes. También es conveniente evaluar a los proveedores y establecer responsabilidades claras para informar vulnerabilidades, distribuir correcciones y comunicar incidentes. Ningún control aislado puede cubrir toda la cadena.
 
-Cuestiones a abordar: por qué la disponibilidad recibe menos atención en la
-formación y en el presupuesto, cómo el ransomware la convirtió en el vector
-económicamente más rentable, y qué relación tiene con conceptos como RTO, RPO y
-continuidad del negocio.
+## Límites y conclusión
 
-### Tema 4 — Criptografía post-cuántica
+La gestión de la cadena de suministro no elimina por completo el riesgo. Las SBOM pueden ser incompletas; la procedencia puede no cubrir todas las dependencias; y un proceso de compilación verificable no demuestra que el código sea inocuo. Asimismo, un proveedor puede desarrollar y distribuir software de forma legítima y, aun así, incorporar una vulnerabilidad. Por eso, la verificación técnica debe combinarse con revisión de código, gestión de vulnerabilidades, control de accesos y monitoreo.
 
-El NIST publicó en 2024 sus primeros estándares de criptografía resistente a
-computadoras cuánticas: **FIPS 203**, **FIPS 204** y **FIPS 205**.
+SolarWinds evidencia el peligro de confiar ciegamente en actualizaciones distribuidas por un proveedor, mientras que Log4Shell muestra cómo una dependencia común puede ampliar la exposición de muchas aplicaciones. En conclusión, la cadena de suministro debe tratarse como parte del perímetro de seguridad: conocer los componentes, verificar su procedencia y mantener un proceso continuo de actualización y respuesta permite reducir el riesgo, aunque no garantiza una seguridad absoluta.
 
-Cuestiones a abordar: qué problema resuelven exactamente (y cuál **no**
-resuelven), qué significa la estrategia *harvest now, decrypt later* para los
-datos que una organización cifra hoy, y qué implica la migración para sistemas
-en producción.
+## Referencias
 
-> Ojo con este tema: es el que más ruido tiene en la divulgación. Distinguir lo
-> que dicen los documentos del NIST de lo que dicen los titulares es
-> exactamente el ejercicio.
+Apache Software Foundation. (2021, 14 de diciembre). *Apache Log4j CVEs*. https://news.apache.org/foundation/entry/apache-log4j-cves
 
-### Tema 5 — Ley 26.388 y las zonas grises de la divulgación responsable
+Cybersecurity and Infrastructure Security Agency. (2020, 13 de diciembre). *Active exploitation of SolarWinds software*. https://www.cisa.gov/news-events/alerts/2020/12/13/active-exploitation-solarwinds-software
 
-La Ley 26.388 incorporó al Código Penal argentino las figuras de delitos
-informáticos. La Ley 27.411 aprobó la adhesión al Convenio de Budapest.
+National Institute of Standards and Technology. (2024, 1 de noviembre). *Software security in supply chains*. https://www.nist.gov/itl/executive-order-14028-improving-nations-cybersecurity/software-security-supply-chains
 
-Cuestiones a abordar: qué conductas quedaron tipificadas, qué situación tiene
-en la Argentina quien descubre e informa de buena fe una vulnerabilidad en un
-sistema de terceros, y cómo tratan otras jurisdicciones ese mismo problema.
-
-> Trabajen con el texto de la ley, no con notas periodísticas sobre la ley. No
-> hace falta ser abogado; hace falta leer la fuente.
-
----
-
-## Requisitos
-
-### Extensión
-
-Entre **800 y 1000 palabras**, sin contar la bibliografía. Fuera de ese rango
-se penaliza. La restricción es parte del ejercicio: obliga a decidir qué entra
-y qué no.
-
-### Fuentes
-
-- **Mínimo 3 fuentes.**
-- De ellas, **al menos 2 deben ser primarias o arbitradas**.
-
-| Cuenta como primaria o arbitrada | No cuenta |
-|---|---|
-| Documentos del NIST, ISO, IETF (RFC) | Wikipedia |
-| Texto de una ley o resolución oficial | Blogs de divulgación general |
-| Papers con revisión por pares | Notas periodísticas |
-| Informes técnicos oficiales de un fabricante o CERT | Videos de YouTube |
-| Informes forenses de un incidente publicados por la organización afectada | Publicaciones de LinkedIn |
-
-Las fuentes secundarias **se pueden usar** — de hecho son útiles para armar la
-cronología de un hecho. Solo que no cuentan para el mínimo de dos.
-
-### Citación
-
-Formato **APA**. Citas en el cuerpo del texto donde corresponda, y lista
-completa al final.
-
-**Toda fuente citada tiene que existir y ser localizable.** Una cita inventada
-o que no se puede encontrar es **causal de rechazo automático** de la entrega
-completa. Esto no es una formalidad: es lo que distingue un trabajo técnico de
-una opinión.
-
-### Declaración de uso de IA
-
-Obligatoria, al final del documento. Ver el modelo más abajo.
-
-Advertencia específica para este trabajo: **los asistentes de IA fabrican citas
-con mucha facilidad.** Producen referencias con formato impecable, autores
-plausibles y años coherentes que no existen. Si usaste un asistente para
-buscar bibliografía, **verificá cada referencia entrando a la fuente original**
-antes de citarla. Una cita inexistente hunde el trabajo, y la responsabilidad
-es de quien firma.
-
----
-
-## Estructura sugerida
-
-No es obligatoria, pero funciona:
-
-1. **Planteo** (~100 palabras) — cuál es la pregunta y por qué importa.
-2. **Desarrollo** (~600 palabras) — la evidencia, organizada. Acá van las citas.
-3. **Tensión o límite** (~150 palabras) — qué no está resuelto, qué se discute,
-   dónde falla la solución que describiste. Esta sección es la que distingue un
-   trabajo bueno de uno correcto.
-4. **Cierre** (~100 palabras) — qué implica para la práctica profesional.
-
----
-
-## Evaluación
-
-Vale **20 de los 100 puntos** del laboratorio. El desglose está en
-[`rubrica.md`](rubrica.md).
-
-Lo que más pesa: **calidad de las fuentes** y **el análisis propio**. Un
-trabajo que resume correctamente tres fuentes buenas sin agregar nada llega a
-la mitad del puntaje. Lo que sube la nota es la sección de tensión: mostrar que
-entendieron dónde la respuesta no es limpia.
-
----
-
-## Plantilla
-
-```markdown
-# Mini-research — Lab 01
-
-**Grupo:** NN
-**Tema elegido:** N — (título)
-**Cantidad de palabras:** ___ (sin bibliografía)
-
----
-
-## Planteo
-
-(...)
-
-## Desarrollo
-
-(...)
-
-## Tensión / límites
-
-(...)
-
-## Cierre
-
-(...)
-
----
-
-## Bibliografía
-
-Formato APA. Marcá cada fuente como [PRIMARIA], [ARBITRADA] o [SECUNDARIA].
-
-1. [PRIMARIA] ...
-2. [ARBITRADA] ...
-3. [SECUNDARIA] ...
-
----
+SLSA. (s. f.). *SLSA specification*. https://slsa.dev/spec/v1.2/
 
 ## Declaración de uso de asistentes de IA
 
-**¿Se usaron asistentes de IA en este trabajo?** Sí / No
-
-| Herramienta | Para qué | Qué partes afectó | Cómo se verificó |
-|---|---|---|---|
-| | | | |
-
-**Verificación de fuentes:** el grupo declara haber accedido y verificado
-individualmente cada una de las referencias citadas.
-```
-
----
-
-## Cómo contar las palabras
-
-```bash
-# Contar palabras de un archivo markdown, aproximado
-wc -w research.md
-```
-
-Restá a mano lo que ocupan la bibliografía y la declaración de IA, o contá solo
-las secciones de contenido. No hace falta precisión al dígito: si están entre
-780 y 1020 no hay problema. Si entregan 400 o 1800, sí.
+Se utilizó ChatGPT como apoyo para estructurar el texto, mejorar la redacción y organizar las referencias bibliográficas. El grupo debe revisar las fuentes originales, comprobar las afirmaciones técnicas, adaptar el texto a su comprensión y verificar que la versión final cumpla con la consigna del laboratorio.
