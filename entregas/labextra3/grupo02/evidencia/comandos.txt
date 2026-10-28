@@ -1,1 +1,2 @@
 python3 labs/labextra3-hardening/verificar-defensa.py --dir entregas/labextra3/grupo02/objetivo
+python3 labs/labextra3-hardening/verificar-defensa.py --dir entregas/labextra3/grupo02/objetivo  # final, 5/5
