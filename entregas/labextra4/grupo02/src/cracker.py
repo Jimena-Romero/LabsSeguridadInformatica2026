@@ -8,20 +8,16 @@ Looteaste `caso/sombra.txt` de phantomcorp-web: un volcado de hashes con sus
 algoritmos y salts. Tu trabajo: recuperar las contraseñas y con ellas abrir el
 loot cifrado de cada usuario (`caso/loot/<usuario>.enc`).
 
-Completá los TODO. NO cambies las firmas ni la CLI.
 `descifrar_loot()` ya viene implementada como referencia: leela.
 
 Uso:
   python3 cracker.py crackear caso/sombra.txt caso/diccionario.txt
   python3 cracker.py descifrar caso/loot/operador.enc --password riverplate
-
-Extra (R3): la contraseña del admin NO está literal en el diccionario.
-Implementá reglas de "mangling" en `aplicar_reglas()`: sufijos de año, de
-números, mayúscula inicial, etc.
 """
 import argparse
 import hashlib
 import sys
+import time
 
 ITER_PBKDF2 = 200_000   # tiene que coincidir con sombra.txt
 
@@ -38,38 +34,81 @@ def descifrar_loot(hex_cifrado: str, password: str) -> str:
 
 
 def hash_de(algo: str, salt_hex: str, password: str) -> str:
-    """Calcula el hash de un candidato EXACTAMENTE como lo hizo el servidor.
-    Pista: md5/sha256 son hash(salt_bytes + password); pbkdf2 usa
-    hashlib.pbkdf2_hmac('sha256', password, salt, ITER_PBKDF2)."""
-    # TODO
-    raise NotImplementedError("Completá hash_de()")
+    """Calcula el hash de un candidato EXACTAMENTE como lo hizo el servidor."""
+    salt = bytes.fromhex(salt_hex)
+    if algo == "pbkdf2":
+        return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, ITER_PBKDF2).hex()
+    h = hashlib.new(algo)
+    h.update(salt + password.encode())
+    return h.hexdigest()
 
 
 def cargar_sombra(ruta: str) -> list:
     """Devuelve una lista de tuplas (usuario, algo, salt_hex, hash_hex)
     parseando sombra.txt (ignorá líneas de comentario que empiezan con #)."""
-    # TODO
-    raise NotImplementedError("Completá cargar_sombra()")
+    resultado = []
+    with open(ruta, encoding="utf-8") as fh:
+        for linea in fh:
+            linea = linea.strip()
+            if not linea or linea.startswith("#"):
+                continue
+            usuario, algo, salt_hex, hash_hex = linea.split(":")
+            resultado.append((usuario, algo, salt_hex, hash_hex))
+    return resultado
 
 
 def aplicar_reglas(palabra: str) -> list:
     """Dado un lemma del diccionario, devolvé variantes probables:
-    la palabra sola, palabra+año (2024..2026), palabra+números comunes
-    (1, 12, 123), palabra con mayúscula inicial... Agregá las que se te ocurran.
-    Esto es lo que john hace con --rules y hashcat con -r."""
-    # TODO
-    raise NotImplementedError("Completá aplicar_reglas()")
+    la palabra sola, palabra+año, palabra+números comunes, mayúscula inicial,
+    y combinaciones de esas. Esto es lo que john hace con --rules."""
+    anios = ["2023", "2024", "2025", "2026"]
+    numeros = ["1", "12", "123", "1234"]
+    capitalizada = palabra.capitalize()
+
+    variantes = {palabra, capitalizada}
+    for sufijo in anios + numeros:
+        variantes.add(palabra + sufijo)
+        variantes.add(capitalizada + sufijo)
+    variantes.add(palabra + "!")
+    variantes.add(capitalizada + "!")
+
+    return list(variantes)
 
 
 def crackear(sombra: list, diccionario: str, con_reglas: bool = False) -> dict:
     """Para cada usuario, probá cada candidato del diccionario (y sus variantes
-    si con_reglas=True) hasta que hash_de() coincida con el hash looteado.
-    Devolvé {usuario: password} de los que cayeron. Imprimí el progreso.
+    si con_reglas=True) hasta que hash_de() coincida con el hash looteado."""
+    with open(diccionario, encoding="utf-8") as fh:
+        palabras = [p.strip() for p in fh if p.strip() and not p.startswith("#")]
 
-    OJO con pbkdf2: 200.000 iteraciones por intento. ¿Conviene probarlo con el
-    diccionario entero? ¿Qué te dice eso del algoritmo? (Pista: es la P4.)"""
-    # TODO
-    raise NotImplementedError("Completá crackear()")
+    halladas = {}
+    for usuario, algo, salt_hex, hash_hex in sombra:
+        print(f"[*] atacando {usuario} ({algo})...")
+        inicio = time.time()
+        intentos = 0
+        encontrada = None
+
+        for palabra in palabras:
+            candidatos = aplicar_reglas(palabra) if con_reglas else [palabra]
+            for candidato in candidatos:
+                intentos += 1
+                if hash_de(algo, salt_hex, candidato) == hash_hex:
+                    encontrada = candidato
+                    break
+            if encontrada:
+                break
+
+        transcurrido = time.time() - inicio
+        velocidad = intentos / transcurrido if transcurrido > 0 else intentos
+        if encontrada:
+            halladas[usuario] = encontrada
+            print(f"    cayó en {intentos} intentos, {transcurrido:.3f}s "
+                  f"({velocidad:.0f} intentos/s)")
+        else:
+            print(f"    no cayó tras {intentos} intentos, {transcurrido:.3f}s "
+                  f"({velocidad:.0f} intentos/s)")
+
+    return halladas
 
 
 def main() -> int:
