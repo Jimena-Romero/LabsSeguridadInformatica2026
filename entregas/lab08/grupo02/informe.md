@@ -9,7 +9,7 @@
 | Milanesio Hebe Del Lourdes | 15343 | @hebemilanesio1 |
 | Romero Jimena Soledad | 15377 | @Jimena-Romero |
 | Toranzo Juan Cruz | 15308 | @JuanToranzo |
-| Torres Damaris | 14563 | @damaji412 |
+| Torres Damaris | 14563 | @damaris412 |
 
 **Entorno:** Docker — host comprometido `phantomcorp` (usuario `operador`) + host interno `phantomcorp-db`
 
